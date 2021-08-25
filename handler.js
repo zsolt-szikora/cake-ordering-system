@@ -51,6 +51,13 @@ module.exports.notifyExternalParties = async (event) => {
   })
 }
 
+module.exports.notifyDeliveryCompany = async (event) => {
+  // Some HTTP call!
+  console.log('Lets imagine that we call the delivery company endpoint')
+
+  return 'done';
+}
+
 function getCakeProducerPromise(records) {
   const ordersPlaced = records.filter(r => r.eventType === 'order_placed');
 

@@ -65,6 +65,15 @@ functions:
       deliveryCompanyQueue: 
         Ref: deliveryServiceQueue
       orderTableName: ordersTable
+  notifyDeliveryCompany:
+    handler: handler.notifyDeliveryCompany
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - deliveryServiceQueue
+              - Arn
+          batchSize: 1
 
 resources:
   Resources:
