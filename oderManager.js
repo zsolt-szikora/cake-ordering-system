@@ -16,7 +16,7 @@ module.exports.createOrder = body => {
     productId: body.productId,
     quantity: body.quantity,
     orderDate: Date.now(),
-    eventType: 'odder_placed'
+    eventType: 'order_placed'
   }
   return order;
 }
@@ -52,7 +52,9 @@ function placeOrderStream(order) {
     PartitionKey: order.orderId,
     StreamName: STREAM_NAME
   }
-  return kinesis.putRecord(params).promise();
+  return kinesis.putRecord(params).promise().then(result => {
+    console.info('KINESIS putrecord returned\n' + JSON.stringify(result, null, 2));
+  });
 }
 
 function getOrder(orderId) {

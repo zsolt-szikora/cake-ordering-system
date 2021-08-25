@@ -1,12 +1,17 @@
 service: cake-ordering-system
+variablesResolutionMode: 20210326
 frameworkVersion: '2'
 
 plugins:
   - serverless-pseudo-parameters
 
+custom:
+  defaultRegion: us-east-1
+
 provider:
   name: aws
   runtime: nodejs12.x
+  region: ${opt:region, self:custom.defaultRegion}
   lambdaHashingVersion: 20201221
 
   iamRoleStatements:
@@ -21,6 +26,15 @@ provider:
         - kinesis:PutRecord
       Resource:
         - arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
+    - Effect: Allow
+      Action:
+        - ses:SendEmail
+      Resource:
+        - "*"
+      Condition:
+        StringEquals:
+          ses:FromAddress:
+            - cakeorderingsystem@grr.la
 
         
 functions:
@@ -42,6 +56,15 @@ functions:
     environment: 
       orderTableName: ordersTable
       orderStreamName: order-events
+  notifyCakeProducer:
+    handler: handler.notifyCakeProducer
+    events:
+      - stream:
+          arn: arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
+    environment:
+      region: ${self:provider.region}
+      cakeProducerEmail: cakeproducer@grr.la
+      orderingSystemEmail: cakeorderingsystem@grr.la
 
 resources:
   Resources:
