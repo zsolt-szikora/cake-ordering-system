@@ -1,18 +1,11 @@
-service: cake-ordering-system
-variablesResolutionMode: 20210326
-frameworkVersion: '2'
+service: cake-ordering-system 
 
 plugins:
   - serverless-pseudo-parameters
 
-custom:
-  defaultRegion: us-east-1
-
 provider:
   name: aws
-  runtime: nodejs12.x
-  region: ${opt:region, self:custom.defaultRegion}
-  lambdaHashingVersion: 20201221
+  runtime: nodejs8.10
 
   iamRoleStatements:
     - Effect: Allow
@@ -36,7 +29,6 @@ provider:
           ses:FromAddress:
             - cakeorderingsystem@grr.la
 
-        
 functions:
   createOrder:
     handler: handler.createOrder
@@ -44,16 +36,16 @@ functions:
       - http:
           path: /order
           method: post
-    environment: 
+    environment:
       orderTableName: ordersTable
       orderStreamName: order-events
-  fulfillOrder:
-    handler: handler.fulfillOrder
+  orderFulfillment:
+    handler: handler.orderFulfillment
     events:
       - http:
           path: /order/fulfill
           method: post
-    environment: 
+    environment:
       orderTableName: ordersTable
       orderStreamName: order-events
   notifyCakeProducer:
@@ -84,4 +76,3 @@ resources:
           - AttributeName: "orderId"
             KeyType: "HASH"
         BillingMode: PAY_PER_REQUEST
-      

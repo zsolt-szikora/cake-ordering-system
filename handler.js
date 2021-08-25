@@ -1,14 +1,16 @@
 'use strict';
 
-const orderManager = require('./oderManager');
+const orderManager = require('./orderManager');
 const kinesisHelper = require('./kinesisHelper');
 const cakeProducerManager = require('./cakeProducerManager');
 
 function createResponse(statusCode, message) {
-  return {
+  const response = {
     statusCode: statusCode,
     body: JSON.stringify(message)
   };
+
+  return response;
 }
 
 module.exports.createOrder = async (event) => {
@@ -23,7 +25,7 @@ module.exports.createOrder = async (event) => {
   })
 };
 
-module.exports.fulfillOrder = async (event) => {
+module.exports.orderFulfillment = async (event) => {
   const body = JSON.parse(event.body);
   const orderId = body.orderId;
   const fulfillmentId = body.fulfillmentId;
@@ -33,27 +35,20 @@ module.exports.fulfillOrder = async (event) => {
   }).catch(error => {
     return createResponse(400, error);
   })
-};
+}
 
 module.exports.notifyCakeProducer = async (event) => {
-  console.info('NOTIFY_CAKE_PRODUCER_CALLED with event\n' + JSON.stringify(event, null, 2));
-
   const records = kinesisHelper.getRecords(event);
-  console.info('RECORDS TO PROCESS\n' + JSON.stringify(records, null, 2));
 
   const ordersPlaced = records.filter(r => r.eventType === 'order_placed');
-  console.info('ORDERS PLACED\n' + JSON.stringify(ordersPlaced, null, 2));
 
   if (ordersPlaced <= 0) {
     return 'there is nothing';
   }
-  console.info('ABOUT TO CALL HANDLE_PLACED_ORDERS');
-  cakeProducerManager.handlePlacedOrders(ordersPlaced).then(result => {
-    console.info('HANDLE_PLACED_ORDERS RETURNED DATA\n' + JSON.stringify(result, null, 2));
-    return result;
-  }).catch(error => {
-    console.info('HANDLE_PLACED_ORDERS RETURNED ERROR\n' + JSON.stringify(error, null, 2));
-    return error;
-  });
 
+  return cakeProducerManager.handlePlacedOrders(ordersPlaced).then(() => {
+    return 'everything went well'
+  }).catch(error => {
+    return error;
+  })
 }
